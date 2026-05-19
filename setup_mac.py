@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 # ###################################################
 # Copyright (C) 2008-2017 The Unknown Horizons Team
@@ -65,7 +65,7 @@ plist = {"CFBundleIconFile": "content/gui/icons/Icon.icns",
 		 "CFBundleIdentifier": "org.unknown-horizons",
 		 "CFBundleName": "Unknown Horizons",
 		 "CFBundleShortVersionString": "0.0.0",
-		 "LSArchitecturePriority": ["x86_64", "i386"],
+		 "LSArchitecturePriority": ["arm64", "x86_64"],
 		 "CFBundleVersion": "0.0.0"
 		}
 

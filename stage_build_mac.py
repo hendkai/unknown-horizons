@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 # ###################################################
 # Copyright (C) 2008-2017 The Unknown Horizons Team
@@ -36,7 +36,7 @@ Usage: stage_build_mac.py [options]
 Options:
     --run                    Start app with "open ./dist/Unknown Horizons.app"
                              when done (all is cleaned before this)
-    --fife-dir=<Location>    Location of FIFE-trunk
+    --fife-dir=<Location>    Optional location of FIFE-trunk fallback
     --python-bin=<Location>  For people with a lot of python,
                              this is totally optional!
     --verbose                Just as it sounds :) will output more info
@@ -84,22 +84,20 @@ def setup(fife_dir):
         print("Copying Icon.icns")
     shutil.copy('./content/gui/icons/Icon.icns', './src/Contents/Resources/')
 
-    if verbose:
-        print("Copying fife source from " + fife_dir + "engine/python/fife")
-    while shutil.copytree(fife_dir + 'engine/python/fife', './fife'):
+    if fife_dir:
         if verbose:
-            print("...")
+            print("Copying fife source from " + fife_dir + "engine/python/fife")
+        shutil.copytree(os.path.join(fife_dir, 'engine', 'python', 'fife'), './fife')
 
     if verbose:
         print("Copying content into src")
-    while shutil.copytree('./content', './src/Contents/Resources/content'):
-        if verbose:
-            print("...")
+    shutil.copytree('./content', './src/Contents/Resources/content')
 
 
 def tearDown(run):
     shutil.rmtree('./src/')
-    shutil.rmtree('./fife')
+    if os.path.exists('./fife'):
+        shutil.rmtree('./fife')
 
     # Remove some other styff
     files = glob.glob('*.egg')
@@ -120,17 +118,18 @@ def build(pyver):
 
 
 def main(argv=None):
+    global verbose
     fife_dir = False
-    pyver = "/usr/bin/python"
+    pyver = sys.executable
     run = False
     if argv is None:
         argv = sys.argv
     try:
         try:
-            opts, args = getopt.getopt(argv[1:], "hfp:rv", [
+            opts, args = getopt.getopt(argv[1:], "hf:p:rv", [
                                        "help", "fife-dir=", "python-bin=",
-                                       "run", "--verbose"])
-        except getopt.error, msg:
+                                       "run", "verbose"])
+        except getopt.error as msg:
             raise Usage(msg)
 
         # option processing
@@ -140,17 +139,14 @@ def main(argv=None):
             if option in ("-f", "--fife-dir",):
                 fife_dir = value
             if option in ("-h", "--help"):
-                raise Usage(help_message)
+                print(help_message)
+                return 0
             if option in ("-r", "--run",):
                 run = True
             if option in ("-v", "--verbose",):
                 verbose = True
 
-        # We got to have the fife source!!!!!
-        if not fife_dir:
-            raise Usage(help_message)
-
-    except Usage, err:
+    except Usage as err:
         print(sys.argv[0].split("/")[-1] + ": " + str(err.msg), file=sys.stderr)
         print("\t for help use --help", file=sys.stderr)
         return 2

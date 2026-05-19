@@ -48,3 +48,55 @@ def test_get_user_game_directory_unix(mocker, tmpdir):
 	assert _data_dir == os.path.join(tmpdir, '.local', 'share',
 									 'unknown-horizons')
 	assert _cache_dir == os.path.join(tmpdir, '.cache', 'unknown-horizons')
+
+
+def test_get_user_game_directory_macos_uses_existing_xdg_dirs(mocker, tmpdir):
+	tmpdir = str(tmpdir)
+	config_dir = os.path.join(tmpdir, '.config', 'unknown-horizons')
+	data_dir = os.path.join(tmpdir, '.local', 'share', 'unknown-horizons')
+	cache_dir = os.path.join(tmpdir, '.cache', 'unknown-horizons')
+	os.makedirs(config_dir)
+	os.makedirs(data_dir)
+	os.makedirs(cache_dir)
+
+	mocker.patch('horizons.util.platform.get_home_directory',
+	             return_value=tmpdir)
+	mocker.patch('platform.system', return_value='Darwin')
+	_config_dir, _data_dir, _cache_dir = get_user_game_directories()
+
+	assert _config_dir == config_dir
+	assert _data_dir == data_dir
+	assert _cache_dir == cache_dir
+
+
+def test_get_user_game_directory_macos_keeps_existing_xdg_data_after_library_exists(mocker, tmpdir):
+	tmpdir = str(tmpdir)
+	library_dir = os.path.join(tmpdir, 'Library', 'Application Support', 'Unknown Horizons')
+	data_dir = os.path.join(tmpdir, '.local', 'share', 'unknown-horizons')
+	os.makedirs(library_dir)
+	os.makedirs(data_dir)
+
+	mocker.patch('horizons.util.platform.get_home_directory',
+	             return_value=tmpdir)
+	mocker.patch('platform.system', return_value='Darwin')
+	_config_dir, _data_dir, _cache_dir = get_user_game_directories()
+
+	assert _config_dir == library_dir
+	assert _data_dir == data_dir
+	assert _cache_dir == os.path.join(tmpdir, 'Library', 'Caches',
+	                                 'Unknown Horizons')
+
+
+def test_get_user_game_directory_macos_uses_library_dirs_by_default(mocker, tmpdir):
+	tmpdir = str(tmpdir)
+	mocker.patch('horizons.util.platform.get_home_directory',
+	             return_value=tmpdir)
+	mocker.patch('platform.system', return_value='Darwin')
+	_config_dir, _data_dir, _cache_dir = get_user_game_directories()
+
+	assert _config_dir == os.path.join(tmpdir, 'Library',
+	                                  'Application Support', 'Unknown Horizons')
+	assert _data_dir == os.path.join(tmpdir, 'Library',
+	                                'Application Support', 'Unknown Horizons')
+	assert _cache_dir == os.path.join(tmpdir, 'Library', 'Caches',
+	                                 'Unknown Horizons')

@@ -50,6 +50,7 @@ import traceback
 
 logger = logging.getLogger("run_uh")
 logfile = None
+MIN_PYTHON_VERSION = (3, 9)
 
 
 def exit_with_error(title, message):
@@ -70,8 +71,36 @@ def exit_with_error(title, message):
 	sys.exit(1)
 
 
-if sys.version_info[:2] < (3, 5):
-	exit_with_error('Unsupported Python version', 'Python3.5 or higher is required to run Unknown Horizons.')
+def get_runtime_architecture():
+	"""Return runtime details useful for native dependency diagnostics."""
+	return {
+		'os': sys.platform,
+		'machine': platform.machine(),
+		'python_version': platform.python_version(),
+		'python_executable': sys.executable,
+		'is_macos': sys.platform == 'darwin',
+		'is_apple_silicon_native': sys.platform == 'darwin' and platform.machine() == 'arm64',
+		'is_rosetta_likely': sys.platform == 'darwin' and platform.machine() == 'x86_64',
+		'platform': platform.platform(),
+		'macos_version': platform.mac_ver()[0] if sys.platform == 'darwin' else '',
+	}
+
+
+def format_python_version(version_info):
+	return '{}.{}'.format(version_info[0], version_info[1])
+
+
+def ensure_python_version(version_info=None):
+	if version_info is None:
+		version_info = sys.version_info
+	if version_info[:2] < MIN_PYTHON_VERSION:
+		exit_with_error(
+			'Unsupported Python version',
+			'Python{} or higher is required to run Unknown Horizons.'.format(
+				format_python_version(MIN_PYTHON_VERSION)))
+
+
+ensure_python_version()
 
 
 def main():
@@ -106,7 +135,6 @@ def main():
 		}
 	})
 
-	import horizons.main
 	from horizons.i18n import gettext as T
 	from horizons.util import create_user_dirs
 	from horizons.util.cmdlineoptions import get_option_parser
@@ -119,6 +147,7 @@ def main():
 	init_environment(True)
 
 	# Start UH.
+	import horizons.main
 	ret = horizons.main.start(options)
 
 	if logfile:
@@ -268,9 +297,64 @@ def setup_debugging(options):
 		log_sys_info()
 
 
+def is_wrong_architecture_error(error):
+	text = str(error).lower()
+	return 'mach-o' in text or 'wrong architecture' in text or 'incompatible architecture' in text
+
+
+def format_fife_import_error(error, paths):
+	runtime = get_runtime_architecture()
+	message = [
+		'Unable to import the FIFE Python bindings.',
+		'Python executable: {}'.format(runtime['python_executable']),
+		'Python version: {}'.format(runtime['python_version']),
+		'Python architecture: {}'.format(runtime['machine'] or 'unknown'),
+		'Platform: {}'.format(runtime['platform']),
+	]
+	if runtime['is_macos']:
+		message.append('macOS version: {}'.format(runtime['macos_version'] or 'unknown'))
+		if runtime['is_apple_silicon_native']:
+			message.append('This is a native Apple Silicon Python. FIFE and FIFEChan must provide arm64 Python extension binaries.')
+		elif runtime['is_rosetta_likely']:
+			message.append('This Python appears to be running as x86_64 on macOS. Use an arm64 Python to run natively without Rosetta.')
+	if error is not None:
+		message.append('Loader error: {}'.format(error))
+		if runtime['is_macos'] and is_wrong_architecture_error(error):
+			message.append('The loader reported a mach-o architecture mismatch. Reinstall FIFE/FIFEChan for arm64 or use a universal2 build that contains an arm64 slice.')
+	if paths:
+		message.append('Fallback FIFE search paths tested:\n{}'.format('\n'.join(paths)))
+	return '\n'.join(message)
+
+
+def _import_fife_bindings():
+	import fife
+	from fife import fife
+	return fife
+
+
+def _clear_cached_fife_modules():
+	for module_name in list(sys.modules):
+		if module_name == 'fife' or module_name.startswith('fife.'):
+			del sys.modules[module_name]
+
+
+def _try_import_fife_bindings():
+	try:
+		return _import_fife_bindings()
+	except (ImportError, OSError):
+		_clear_cached_fife_modules()
+		raise
+
+
 def find_fife(paths):
-	"""Returns True if the fife module was found in one of the supplied paths."""
-	default_sys_path = sys.path # to restore sys.path later
+	"""Returns True if the fife module was found in installed packages or supplied paths."""
+	try:
+		_try_import_fife_bindings()
+		return True
+	except (ImportError, OSError) as e:
+		installed_error = e
+
+	default_sys_path = list(sys.path) # to restore sys.path later
 	for path in paths:
 		# extract parent directory to FIFE module
 		if path.endswith("fife") and os.path.isdir(path):
@@ -278,22 +362,21 @@ def find_fife(paths):
 		sys.path.insert(0, path)
 
 		try:
-			import fife
-			try:
-				from fife import fife
-				break
-			except ImportError as e:
-				if str(e) != 'cannot import name fife':
-					logger.warning('Failed to use FIFE from %s', fife)
-					logger.warning(str(e))
-					if str(e) == 'DLL load failed: %1 is not a valid Win32 application.':
-						# We found FIFE but the Python and FIFE architectures don't match (Windows).
-						exit_with_error('Unsupported Python version', '32 bit FIFE requires 32 bit (x86) Python 3.')
-				return False
-		except ImportError:
+			_try_import_fife_bindings()
+			break
+		except (ImportError, OSError) as e:
+			logger.warning('Failed to use FIFE from %s', path)
+			logger.warning(str(e))
+			if str(e) == 'DLL load failed: %1 is not a valid Win32 application.':
+				# We found FIFE but the Python and FIFE architectures don't match (Windows).
+				exit_with_error('Unsupported Python version', '32 bit FIFE requires 32 bit (x86) Python 3.')
+			if sys.platform == 'darwin' and is_wrong_architecture_error(e):
+				exit_with_error('Failed to load module fife', format_fife_import_error(e, paths))
 			pass
 	else:
 		sys.path = default_sys_path	# restore sys.path if all imports failed
+		if sys.platform == 'darwin' and installed_error:
+			logger.warning(format_fife_import_error(installed_error, paths))
 		return False
 	return True
 
@@ -337,10 +420,9 @@ def setup_fife():
 	paths = get_fife_paths()
 	if not find_fife(paths):
 		try:
-			from fife import fife
-		except ImportError:
-			directories = '\n'.join(paths)
-			exit_with_error('Failed to load module fife', 'Below directory paths were tested:\n' + directories)
+			_import_fife_bindings()
+		except (ImportError, OSError) as e:
+			exit_with_error('Failed to load module fife', format_fife_import_error(e, paths))
 
 	from fife import fife
 	fife_version_major = fife.get_major() if hasattr(fife, 'get_major') else 'unknown'

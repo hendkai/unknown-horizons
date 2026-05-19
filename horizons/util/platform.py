@@ -41,6 +41,7 @@ def get_home_directory():
 
 # define here as string to reduce chance of typos
 UH = "unknown-horizons"
+UH_DISPLAY_NAME = "Unknown Horizons"
 
 
 def get_old_user_game_directory():
@@ -70,6 +71,12 @@ def _try_directories(paths, default=None):
 	return default
 
 
+def _macos_default_directory(new_path, previous_xdg_path):
+	if os.path.exists(previous_xdg_path):
+		return previous_xdg_path
+	return new_path
+
+
 def get_user_game_directories():
 	"""
 	Returns a triplet of directories for game-related data.
@@ -85,6 +92,15 @@ def get_user_game_directories():
 		config_dir = user_dir
 		data_dir = user_dir
 		cache_dir = os.path.join(user_dir, "cache")
+	elif platform.system() == "Darwin":
+		user_dir = os.path.join(home_directory, "Library", "Application Support", UH_DISPLAY_NAME)
+		config_dir = _macos_default_directory(
+			user_dir, os.path.join(home_directory, ".config", UH))
+		data_dir = _macos_default_directory(
+			user_dir, os.path.join(home_directory, ".local", "share", UH))
+		cache_dir = _macos_default_directory(
+			os.path.join(home_directory, "Library", "Caches", UH_DISPLAY_NAME),
+			os.path.join(home_directory, ".cache", UH))
 	else:
 		config_dir = os.path.join(home_directory, ".config", UH)
 		data_dir = os.path.join(home_directory, ".local", "share", UH)
