@@ -77,6 +77,20 @@ logs, and savegames stay in the normal macOS user directories under
 `~/Library/Application Support/Unknown Horizons` and
 `~/Library/Caches/Unknown Horizons`.
 
+Create a distributable DMG from the app bundle with:
+
+```bash
+python3 build_dmg_mac.py
+```
+
+The expected output is `dist/Unknown-Horizons-<version>.dmg`, where `<version>`
+matches the version written to the app bundle metadata. To rebuild the app bundle
+and then create the DMG in one command, run:
+
+```bash
+python3 build_dmg_mac.py --build-app
+```
+
 ## Community
 
 Type         | Where?
