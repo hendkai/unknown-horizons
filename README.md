@@ -58,6 +58,25 @@ python3 -c "import enet; print(enet)"
 
 The first command should print `arm64`. FIFE and FIFEChan are required for startup. ENet is optional; if no native `enet` module is installed, multiplayer is unavailable but local game startup should still work.
 
+### macOS app bundle
+
+The macOS bundle build uses `py2app` and the staging helper in this repository.
+Install the normal runtime dependencies first, including Python 3.9 or newer,
+fifengine/FIFEChan Python bindings, and `py2app`. Translation and atlas assets
+are prepared by the build step.
+
+Build the app bundle from the repository root:
+
+```bash
+python3 stage_build_mac.py
+```
+
+The expected output is `dist/Unknown Horizons.app`. The bundle contains
+`Contents/Resources/Icon.icns` and `Contents/Resources/content/`; config, cache,
+logs, and savegames stay in the normal macOS user directories under
+`~/Library/Application Support/Unknown Horizons` and
+`~/Library/Caches/Unknown Horizons`.
+
 ## Community
 
 Type         | Where?

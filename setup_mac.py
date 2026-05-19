@@ -27,54 +27,88 @@
 # details can be found at http://wiki.unknown-horizons.org/w/MacOS_build_notes
 
 import os
+import platform
+import subprocess
+from pathlib import Path
 
 from setuptools import setup
 
 # Sets what directory to crawl for files to include
 # Relative to location of setup.py; leave off trailing slash
-includes_dir = 'content'
+INCLUDES_DIR = 'content'
 
 # Set the root directory for included files
 # Relative to the bundle's Resources folder, so '../../' targets bundle root
-includes_target = 'content/'
+INCLUDES_TARGET = 'content/'
+ICON_FILE = os.path.join('content', 'gui', 'icons', 'Icon.icns')
 
-# Initialize an empty list so we can use list.append()
-data_includes = []
 
-# Walk the includes directory and include all the files
-for root, dirs, filenames in os.walk(includes_dir):
-    if root is includes_dir:
-        final = includes_target
-    else:
-        final = includes_target + root[len(includes_dir) + 1:] + '/'
-    files = []
-    for file in filenames:
-        if (file[0] != '.'):
-            files.append(os.path.join(root, file))
-    data_includes.append((final, files))
+def get_bundle_version():
+	"""Return the project version without importing runtime constants."""
+	try:
+		git = "git"
+		if platform.system() == "Windows":
+			git = "git.exe"
 
-packages = []
-packages.append('horizons')
-packages.append('fife')
+		tag_structure = "20[0-9][0-9].[0-9]*"
+		describe = [git, "describe", "--tags", "--match", tag_structure]
+		return subprocess.check_output(
+			describe,
+			cwd=Path(__file__).parent,
+			stderr=subprocess.DEVNULL,
+			universal_newlines=True,
+		).rstrip('\n')
+	except (subprocess.CalledProcessError, OSError, RuntimeError):
+		return "<unknown>"
+
+
+def get_data_includes(includes_dir=INCLUDES_DIR, includes_target=INCLUDES_TARGET):
+	"""Return data files that py2app should place in Contents/Resources/content."""
+	data_includes = [('', [ICON_FILE])]
+	for root, dirs, filenames in os.walk(includes_dir):
+		if root == includes_dir:
+			final = includes_target
+		else:
+			final = includes_target + root[len(includes_dir) + 1:] + '/'
+		files = []
+		for file in filenames:
+			if file[0] != '.':
+				files.append(os.path.join(root, file))
+		data_includes.append((final, files))
+	return data_includes
+
+PACKAGES = ['horizons', 'fife']
+BUNDLE_VERSION = get_bundle_version()
 
 #Info.plist keys for the app
-#Icon.icns must be inside src/Contents/Resources/
-plist = {"CFBundleIconFile": "content/gui/icons/Icon.icns",
+# Icon.icns must be inside Contents/Resources/
+plist = {"CFBundleDevelopmentRegion": "en",
 		 "CFBundleDisplayName": "Unknown Horizons",
 		 "CFBundleExecutable": "Unknown Horizons",
-		 "CFBundleIdentifier": "org.unknown-horizons",
+		 "CFBundleIconFile": "Icon.icns",
+		 "CFBundleIdentifier": "org.unknown-horizons.UnknownHorizons",
 		 "CFBundleName": "Unknown Horizons",
-		 "CFBundleShortVersionString": "0.0.0",
+		 "CFBundlePackageType": "APPL",
+		 "CFBundleShortVersionString": BUNDLE_VERSION,
+		 "CFBundleVersion": BUNDLE_VERSION,
 		 "LSArchitecturePriority": ["arm64", "x86_64"],
-		 "CFBundleVersion": "0.0.0"
+		 "LSMinimumSystemVersion": "10.15",
+		 "NSHighResolutionCapable": True,
+		 "NSSupportsAutomaticGraphicsSwitching": True,
 		}
 
 APP = ['run_uh.py']
-OPTIONS = {'argv_emulation': True, 'packages': packages, 'plist': plist}
+OPTIONS = {'argv_emulation': True, 'packages': PACKAGES, 'plist': plist}
 
-setup(
-    app=APP,
-    data_files=data_includes,
-    options={'py2app': OPTIONS},
-    setup_requires=['py2app'],
-)
+
+def main():
+	setup(
+		app=APP,
+		data_files=get_data_includes(),
+		options={'py2app': OPTIONS},
+		setup_requires=['py2app'],
+	)
+
+
+if __name__ == "__main__":
+	main()
