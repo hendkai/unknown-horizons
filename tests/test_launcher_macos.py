@@ -29,6 +29,22 @@ def test_python_minimum_accepts_supported_interpreter(monkeypatch):
 	run_uh.ensure_python_version((3, 9, 0))
 
 
+def test_content_dir_parent_path_finds_macos_bundle_resources(tmp_path, monkeypatch):
+	bundle = tmp_path / 'Unknown Horizons.app'
+	macos_dir = bundle / 'Contents' / 'MacOS'
+	resources_dir = bundle / 'Contents' / 'Resources'
+	content_dir = resources_dir / 'content'
+	macos_dir.mkdir(parents=True)
+	content_dir.mkdir(parents=True)
+	launcher = macos_dir / 'run_uh.py'
+	launcher.write_text('')
+
+	monkeypatch.setattr(run_uh, '__file__', str(launcher))
+	monkeypatch.chdir(tmp_path)
+
+	assert run_uh.get_content_dir_parent_path() == str(resources_dir.resolve())
+
+
 def test_macos_arm64_fife_error_mentions_native_bindings(monkeypatch):
 	monkeypatch.setattr(run_uh.sys, 'platform', 'darwin')
 	monkeypatch.setattr(run_uh.sys, 'executable', '/opt/homebrew/bin/python3')

@@ -183,9 +183,12 @@ def get_content_dir_parent_path():
 
 	options = []
 	# Try the directory this file is in. This should work in most cases.
-	options.append(os.path.dirname(os.path.realpath(__file__)))
-	# Try path for Mac Os X app container (Unknown Horizons.app).
-	# Unknown Horizons.app/Contents/Resources/contents
+	launcher_dir = os.path.dirname(os.path.realpath(__file__))
+	options.append(launcher_dir)
+	# Try paths for macOS app containers:
+	# Unknown Horizons.app/Contents/MacOS/run_uh.py
+	# Unknown Horizons.app/Contents/Resources/content
+	options.append(os.path.normpath(os.path.join(launcher_dir, '..', 'Resources')))
 	options.append(os.getcwd())
 	# Try often-used paths on Linux.
 	for path in ('/app/share', '/usr/share/games', '/usr/share', '/usr/local/share/games', '/usr/local/share'):

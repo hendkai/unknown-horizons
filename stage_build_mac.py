@@ -29,6 +29,16 @@ import shutil
 import sys
 
 verbose = False
+RESOURCE_DIR = './src/Contents/Resources'
+CONTENT_DIR = './content'
+ICON_PATH = os.path.join(CONTENT_DIR, 'gui', 'icons', 'Icon.icns')
+STAGED_CONTENT_DIR = os.path.join(RESOURCE_DIR, 'content')
+STAGED_ICON_PATH = os.path.join(RESOURCE_DIR, 'Icon.icns')
+REQUIRED_CONTENT_FILES = (
+    'settings-template.xml',
+    'game.sql',
+    os.path.join('maps', 'development.sqlite'),
+)
 
 help_message = '''
 Usage: stage_build_mac.py [options]
@@ -48,10 +58,29 @@ class Usage(Exception):
         self.msg = msg
 
 
+def validate_source_assets():
+    required_paths = [CONTENT_DIR, ICON_PATH]
+    required_paths.extend(os.path.join(CONTENT_DIR, path) for path in REQUIRED_CONTENT_FILES)
+    missing = [path for path in required_paths if not os.path.exists(path)]
+    if missing:
+        raise RuntimeError("Missing required macOS bundle asset(s): {}".format(
+            ", ".join(missing)))
+
+
+def validate_staging_layout():
+    required_paths = [STAGED_CONTENT_DIR, STAGED_ICON_PATH]
+    required_paths.extend(os.path.join(STAGED_CONTENT_DIR, path) for path in REQUIRED_CONTENT_FILES)
+    missing = [path for path in required_paths if not os.path.exists(path)]
+    if missing:
+        raise RuntimeError("Incomplete macOS bundle staging layout: {}".format(
+            ", ".join(missing)))
+
+
 def setup(fife_dir):
     """
     Setup files and directories
     """
+    validate_source_assets()
     if verbose:
         print("Setting up environment")
     # If these two exists we remove them for a clean build
@@ -77,12 +106,12 @@ def setup(fife_dir):
     if verbose:
         print("Create src directory")
     # The source files, for building app correctly
-    os.makedirs('./src/Contents/Resources/')
+    os.makedirs(RESOURCE_DIR)
 
     # Copy fife and content
     if verbose:
         print("Copying Icon.icns")
-    shutil.copy('./content/gui/icons/Icon.icns', './src/Contents/Resources/')
+    shutil.copy(ICON_PATH, RESOURCE_DIR)
 
     if fife_dir:
         if verbose:
@@ -91,7 +120,8 @@ def setup(fife_dir):
 
     if verbose:
         print("Copying content into src")
-    shutil.copytree('./content', './src/Contents/Resources/content')
+    shutil.copytree(CONTENT_DIR, STAGED_CONTENT_DIR)
+    validate_staging_layout()
 
 
 def tearDown(run):
