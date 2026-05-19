@@ -30,7 +30,7 @@ from horizons.i18n import gettext as T
 from horizons.messaging import HoverInstancesChanged
 from horizons.util.lastactiveplayersettlementmanager import LastActivePlayerSettlementManager
 from horizons.util.python.weaklist import WeakList
-from horizons.util.worldobject import WorldObject
+from horizons.util.worldobject import WorldObject, WorldObjectNotFound
 
 
 class NavigationTool(CursorTool):
@@ -252,7 +252,10 @@ class NavigationTool(CursorTool):
 			# actual game representation class is created (network play)
 			if id == '':
 				continue
-			instance = WorldObject.get_object_by_id(int(id))
+			try:
+				instance = WorldObject.get_object_by_id(int(id))
+			except WorldObjectNotFound:
+				continue
 			hover_instances.append(instance)
 		return hover_instances
 

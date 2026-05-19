@@ -22,6 +22,7 @@
 
 import locale
 import logging
+import sys
 
 from fife import fife
 from fife.extensions import fifelog, pychan
@@ -92,7 +93,11 @@ class Fife:
 		(width, height) = self._finalSetting['ScreenResolution'].split('x')
 		self.engine_settings.setScreenWidth(int(width))
 		self.engine_settings.setScreenHeight(int(height))
-		self.engine_settings.setRenderBackend(self._finalSetting['RenderBackend'])
+		render_backend = self._finalSetting['RenderBackend']
+		if sys.platform == 'darwin' and render_backend == 'OpenGL':
+			self.log.warning('macOS detected: forcing SDL render backend (OpenGL is deprecated on macOS)')
+			render_backend = 'SDL'
+		self.engine_settings.setRenderBackend(render_backend)
 		self.engine_settings.setFullScreen(self._finalSetting['FullScreen'])
 		self.engine_settings.setLightingModel(self._finalSetting['Lighting'])
 
