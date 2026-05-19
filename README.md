@@ -91,6 +91,10 @@ and then create the DMG in one command, run:
 python3 build_dmg_mac.py --build-app
 ```
 
+For release verification on native Apple Silicon, including installation checks
+and the manual smoke-test checklist, see
+[Apple-Silicon Build and Smoke Test](doc/apple_silicon_build_smoke_test.md).
+
 ## Community
 
 Type         | Where?
