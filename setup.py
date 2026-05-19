@@ -69,9 +69,25 @@ for root, dirs, files in os.walk('horizons'):
 	packages.append(root)
 
 # Add enet files for build platform
+def get_enet_architecture(machine=None):
+	if machine is None:
+		machine = platform.machine()
+	mapping = {
+		'x86_64': 'x64',
+		'amd64': 'x64',
+		'arm64': 'arm64',
+		'aarch64': 'arm64',
+		'universal2': 'universal2',
+	}
+	try:
+		return mapping[machine.lower()]
+	except KeyError:
+		raise RuntimeError("Unsupported ENet architecture: {!s}".format(machine))
+
+
 systemtype = platform.system().lower()
 arch = platform.machine()
-enetdir = "horizons/network/{!s}-x{!s}".format(systemtype, arch[-2:])
+enetdir = "horizons/network/{!s}-{!s}".format(systemtype, get_enet_architecture(arch))
 package_data = {enetdir: ['*.so']}
 
 
@@ -256,6 +272,7 @@ setup(
 	author='The Unknown Horizons Team',
 	author_email='team@unknown-horizons.org',
 	url='http://www.unknown-horizons.org',
+	python_requires='>=3.9',
 	packages=packages,
 	package_data=package_data,
 	data_files=data,

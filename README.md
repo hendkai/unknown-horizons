@@ -44,6 +44,20 @@ Technology     | Component
 **[fifechan](https://github.com/fifengine/fifechan)**   | GUI library
 **[pyenet](https://github.com/aresch/pyenet)** | The multiplayer library. Can be ignored if you don't want to play multiplayer
 
+### macOS Apple Silicon
+
+Unknown Horizons requires Python 3.9 or newer. On Apple Silicon, run it with a native arm64 Python and native arm64 builds of fifengine/FIFEChan. Do not start the game with an x86_64 Python under Rosetta if you want native execution.
+
+Check the runtime before starting the game:
+
+```bash
+python3 -c "import platform, sys; print(platform.machine()); print(sys.executable)"
+python3 -c "from fife import fife; print(fife)"
+python3 -c "import enet; print(enet)"
+```
+
+The first command should print `arm64`. FIFE and FIFEChan are required for startup. ENet is optional; if no native `enet` module is installed, multiplayer is unavailable but local game startup should still work.
+
 ## Community
 
 Type         | Where?
