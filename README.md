@@ -95,6 +95,10 @@ For release verification on native Apple Silicon, including installation checks
 and the manual smoke-test checklist, see
 [Apple-Silicon Build and Smoke Test](doc/apple_silicon_build_smoke_test.md).
 
+The Apple-Silicon GitHub Actions workflow runs focused packaging checks for pull
+requests and branch pushes. Full DMG builds are release-only and can be started
+manually with `workflow_dispatch` or by pushing a matching release tag.
+
 ## Community
 
 Type         | Where?

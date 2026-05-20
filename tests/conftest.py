@@ -34,6 +34,7 @@ def pytest_addoption(parser):
 
 def pytest_configure(config):
 	config.addinivalue_line('markers', 'long: mark test as long-running')
+	install_fife_mock()
 
 
 def pytest_runtest_setup(item):
@@ -41,26 +42,26 @@ def pytest_runtest_setup(item):
 	Called for every test, here we skip expensive tests from the default test run.
 	"""
 	# Skip tests marked as long unless specified otherwise on the command line
-	marker = item.get_marker('long')
+	marker = item.get_closest_marker('long')
 	if marker is not None and not item.config.getoption('--long-tests'):
 		pytest.skip('test is long running')
 
 	# Skip gui tests unless specified otherwise on the command line
-	marker = item.get_marker('gui_test')
+	marker = item.get_closest_marker('gui_test')
 	if marker is not None and not item.config.getoption('--gui-tests'):
 		pytest.skip('test is gui test')
 
 
 # Basic test setup, installs global mock for fife so we can run gui/game tests.
 #
-# We need to run this code as soon as possible, before any import of game or test code happened,
-# and `pytest_namespace` is one of the first things that runs. Because it is called for every
-# plugin, we remember whether we installed the mock already.
+# We need to run this code as soon as possible, before any import of game or test code happened.
+# Because pytest_configure is called for every plugin, we remember whether we installed the mock
+# already.
 
 FIFE_MOCK_INSTALLED = False
 
 
-def pytest_namespace():
+def install_fife_mock():
 	"""
 	This needs to run at first to avoid that other code gets a reference to the real fife
 	module.
