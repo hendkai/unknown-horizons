@@ -43,8 +43,37 @@ INCLUDES_TARGET = 'content/'
 ICON_FILE = os.path.join('content', 'gui', 'icons', 'Icon.icns')
 
 
+def get_git_head_version(project_root):
+	"""Return the current git HEAD abbreviation without requiring git."""
+	git_path = project_root / '.git'
+	if git_path.is_file():
+		prefix, _, value = git_path.read_text().strip().partition(':')
+		if prefix == 'gitdir' and value:
+			git_path = (project_root / value.strip()).resolve()
+
+	head_path = git_path / 'HEAD'
+	if not head_path.exists():
+		return None
+
+	head_ref = head_path.read_text().strip().partition(' ')[2]
+	if head_ref:
+		head_file = git_path / head_ref
+		if not head_file.exists():
+			common_dir_path = git_path / 'commondir'
+			if common_dir_path.exists():
+				common_dir = (git_path / common_dir_path.read_text().strip()).resolve()
+				head_file = common_dir / head_ref
+	else:
+		head_file = head_path
+
+	if head_file.exists():
+		return head_file.read_text().strip()[0:7]
+	return None
+
+
 def get_bundle_version():
-	"""Return the project version without importing runtime constants."""
+	"""Return the project version for macOS bundle metadata."""
+	project_root = Path(__file__).parent
 	try:
 		git = "git"
 		if platform.system() == "Windows":
@@ -54,12 +83,26 @@ def get_bundle_version():
 		describe = [git, "describe", "--tags", "--match", tag_structure]
 		return subprocess.check_output(
 			describe,
-			cwd=Path(__file__).parent,
+			cwd=project_root,
 			stderr=subprocess.DEVNULL,
 			universal_newlines=True,
 		).rstrip('\n')
 	except (subprocess.CalledProcessError, OSError, RuntimeError):
-		return "<unknown>"
+		try:
+			from horizons.constants import VERSION
+			return VERSION.RELEASE_VERSION
+		except (ImportError, OSError, RuntimeError, subprocess.CalledProcessError):
+			pass
+
+		head_version = get_git_head_version(project_root)
+		if head_version:
+			return head_version
+
+		try:
+			with (project_root / 'content' / 'packages' / 'gitversion.txt').open() as f:
+				return f.read()
+		except IOError:
+			return '<unknown>'
 
 
 def get_data_includes(includes_dir=INCLUDES_DIR, includes_target=INCLUDES_TARGET):

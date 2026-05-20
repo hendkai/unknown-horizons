@@ -44,6 +44,19 @@ dist/Unknown Horizons.app
 
 The staging helper validates required source assets and the app bundle layout.
 
+## CI and Release Workflow
+
+The GitHub Actions Apple-Silicon workflow has two paths. Pull requests and
+branch pushes run only focused packaging and launcher tests, so they do not
+build a DMG, upload artifacts, or publish a GitHub Release.
+
+Manual `workflow_dispatch` runs and release tag pushes run the full release
+build through `scripts/build_apple_silicon_release.sh`. That path validates a
+native macOS `arm64` host, a native `arm64` Python interpreter, and the required
+release tooling before building the app bundle and DMG.
+
+GitHub Release publishing is limited to release tag pushes.
+
 ## Build the DMG
 
 Create a DMG from an existing app bundle:
