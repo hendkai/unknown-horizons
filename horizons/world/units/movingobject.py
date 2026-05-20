@@ -27,6 +27,7 @@ from fife import fife
 from horizons.component.componentholder import ComponentHolder
 from horizons.constants import GAME_SPEED
 from horizons.scheduler import Scheduler
+from horizons.util.fife_compat import get_fife_action_name
 from horizons.util.pathfinding import PathBlockedError
 from horizons.util.python.weakmethodlist import WeakMethodList
 from horizons.util.shapes import Point
@@ -238,7 +239,7 @@ class MovingObject(ComponentHolder, ConcreteObject):
 		self.act(self._move_action)
 		diagonal = self._next_target.x != self.position.x and self._next_target.y != self.position.y
 		speed = float(self.session.timer.get_ticks(1)) / move_time[0]
-		action = self._instance.getCurrentAction().getId()
+		action = get_fife_action_name(self._instance.getCurrentAction())
 		self._instance.follow(action, self._route, speed)
 
 		#self.log.debug("%s registering move tick in %s ticks", self, move_time[int(diagonal)])
