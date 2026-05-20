@@ -59,7 +59,11 @@ def get_bundle_version():
 			universal_newlines=True,
 		).rstrip('\n')
 	except (subprocess.CalledProcessError, OSError, RuntimeError):
-		return "<unknown>"
+		try:
+			from horizons.constants import VERSION
+			return VERSION.RELEASE_VERSION
+		except Exception:
+			return "<unknown>"
 
 
 def get_data_includes(includes_dir=INCLUDES_DIR, includes_target=INCLUDES_TARGET):

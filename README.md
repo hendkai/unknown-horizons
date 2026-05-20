@@ -91,6 +91,16 @@ and then create the DMG in one command, run:
 python3 build_dmg_mac.py --build-app
 ```
 
+For a guarded native arm64 one-command release build, run:
+
+```bash
+scripts/build_apple_silicon_release.sh
+```
+
+The same release build is automated by the GitHub Actions workflow
+`.github/workflows/apple-silicon-release.yml`. It can be started manually and it
+runs automatically for release tags.
+
 For release verification on native Apple Silicon, including installation checks
 and the manual smoke-test checklist, see
 [Apple-Silicon Build and Smoke Test](doc/apple_silicon_build_smoke_test.md).

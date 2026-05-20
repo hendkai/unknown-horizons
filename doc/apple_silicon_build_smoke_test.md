@@ -28,6 +28,45 @@ The first command should print `arm64`. FIFE import failures or architecture
 mismatch messages must be fixed before using the build for Apple-Silicon
 verification. ENet import failures only block multiplayer verification.
 
+## Automated Apple-Silicon Release Build
+
+A GitHub Actions workflow is available in
+`.github/workflows/apple-silicon-release.yml`. It runs on a native macOS arm64
+runner, rejects Rosetta/x86_64 builds, builds the app bundle, creates a versioned
+DMG, writes a SHA-256 checksum, and uploads both files as workflow artifacts.
+For tags matching `20[0-9][0-9].*` or `v*`, it also attaches the DMG and checksum
+to the GitHub release.
+
+Manual trigger:
+
+```bash
+gh workflow run apple-silicon-release.yml --ref <branch-or-tag>
+```
+
+The workflow requires native arm64 FIFE/FIFEChan bindings on the runner. If FIFE
+is available as a checkout rather than an installed Python package, pass its root
+path via the workflow's `fife-root` input. The path must contain
+`engine/python/fife`.
+
+## Local One-Command Build
+
+Run from the repository root on an Apple-Silicon Mac:
+
+```bash
+scripts/build_apple_silicon_release.sh
+```
+
+The script performs the same guard checks as CI, runs the macOS packaging unit
+tests, creates `dist/Unknown Horizons.app`, builds
+`dist/Unknown-Horizons-<version>.dmg`, and writes
+`dist/Unknown-Horizons-<version>.dmg.sha256`.
+
+If FIFE is not installed globally, provide a native arm64 FIFE checkout:
+
+```bash
+FIFE_ROOT=/path/to/fifengine scripts/build_apple_silicon_release.sh
+```
+
 ## Build the App Bundle
 
 Run from the repository root:
