@@ -71,6 +71,12 @@ The expected artifact is:
 dist/Unknown-Horizons-<version>.dmg
 ```
 
+Before installing the artifact, record its SHA-256 in the smoke-test report:
+
+```bash
+shasum -a 256 dist/Unknown-Horizons-<version>.dmg
+```
+
 To rebuild the app bundle and then create the DMG in one step:
 
 ```bash
@@ -80,12 +86,15 @@ python3 build_dmg_mac.py --build-app
 ## Installation Verification
 
 1. Mount `dist/Unknown-Horizons-<version>.dmg`.
-2. Copy `Unknown Horizons.app` from the mounted DMG to `/Applications`.
-3. Launch `/Applications/Unknown Horizons.app`, not the app inside the mounted
+2. Remove any existing `/Applications/Unknown Horizons.app` or explicitly
+   replace it during the copy. Do not continue if the installed app cannot be
+   replaced by the DMG candidate.
+3. Copy `Unknown Horizons.app` from the mounted DMG to `/Applications`.
+4. Launch `/Applications/Unknown Horizons.app`, not the app inside the mounted
    DMG.
-4. Confirm the app opens without Python version, FIFE, FIFEChan, or
+5. Confirm the app opens without Python version, FIFE, FIFEChan, or
    architecture mismatch errors.
-5. Verify the copied app bundle contains these paths:
+6. Verify the copied app bundle contains these paths:
 
 ```text
 /Applications/Unknown Horizons.app/Contents/Resources/content/
@@ -95,6 +104,21 @@ python3 build_dmg_mac.py --build-app
 The launcher executable at `Contents/MacOS/Unknown Horizons` must be present and
 executable. The `Contents/Resources/content/` directory must contain the game
 assets used at runtime.
+
+## Runtime Architecture Verification
+
+The release candidate only satisfies native Apple-Silicon verification when the
+installed app runs as `arm64`. Check the app process after launching it from
+`/Applications`:
+
+```bash
+pgrep -x "Unknown Horizons"
+ps -o pid,arch,comm -p <pid>
+```
+
+The reported architecture must be `arm64`. Any Python, FIFE, FIFEChan, or
+dependency architecture mismatch warning is a failed smoke test until the build
+is fixed and retested from a freshly installed DMG.
 
 ## Smoke-Test Checklist
 
@@ -117,6 +141,11 @@ assets used at runtime.
 - Relaunch the copied app and load the saved game.
 - Confirm the loaded game preserves the settlement and built structures.
 
+Use a fresh user profile when practical, or record the existing profile used for
+testing. Do not mark save/load as passed until the app has been fully quit,
+reopened from `/Applications/Unknown Horizons.app`, and the saved game has loaded
+successfully.
+
 Optional multiplayer check:
 
 - If native `pyenet`/`enet` is installed, open the multiplayer flow far enough to
@@ -137,6 +166,36 @@ flows when a graphical test environment with FIFE is available:
 
 Run GUI tests only in an environment prepared for them, for example with the
 project's `--gui-tests` pytest option or the existing GUI test runner.
+
+## Smoke-Test Report
+
+Create one filled report per release candidate under
+`doc/release_smoke_reports/`, using
+`doc/release_smoke_reports/apple_silicon_smoke_test_template.md`.
+
+The report must include:
+
+- Release version and tested DMG path.
+- DMG SHA-256.
+- Test date, tester, macOS version, and host architecture.
+- Confirmation that the app was copied to and launched from
+  `/Applications/Unknown Horizons.app`.
+- Artifact validation results for mount, copy, executable, and bundled content.
+- Runtime validation results for app launch, `arm64` process architecture,
+  FIFE/FIFEChan loading, and absence of architecture mismatch warnings.
+- Manual flow results for launch, settings, help or credits, singleplayer,
+  settlement founding, road and production or storage building placement, save,
+  relaunch, and load.
+- Final result: `pass`, `fail`, or `blocked`.
+- Notes for any workaround, Gatekeeper/quarantine prompt, launch log, stall, or
+  known deviation.
+
+Pass the release candidate only when every required launch, settings,
+singleplayer, settlement, save, and load check succeeds from the installed
+`/Applications` app with native `arm64` runtime validation. Mark the result as
+`fail` for runtime or flow regressions. Mark it as `blocked` when the DMG,
+hardware, native dependencies, or macOS GUI environment prevent the test from
+running.
 
 ## Troubleshooting
 
