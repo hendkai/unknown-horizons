@@ -74,6 +74,7 @@ def init_pychan():
 	from horizons.gui.widgets.buysellinventory import BuySellInventory
 	from horizons.gui.widgets.imagefillstatusbutton import ImageFillStatusButton
 	from horizons.gui.widgets.progressbar import ProgressBar, TilingProgressBar
+	from horizons.gui.widgets.readablelistbox import ReadableListBox
 	# additionally, ImageButton is imported from widgets.imagebutton above
 	from horizons.gui.widgets.imagebutton import CancelButton, DeleteButton, MainmenuButton, OkButton
 	from horizons.gui.widgets.icongroup import TabBG, TilingHBox, hr
@@ -83,7 +84,7 @@ def init_pychan():
 
 	widgets = [OkButton, CancelButton, DeleteButton, MainmenuButton,
 	           Inventory, BuySellInventory, ImageFillStatusButton,
-	           ProgressBar, StepSlider, TabBG,
+	           ProgressBar, StepSlider, ReadableListBox, TabBG,
 	           HealthWidget, StanceWidget, WeaponStorageWidget,
 	           RenameLabel, RenameImageButton,
 	           TilingHBox, TilingProgressBar, hr,

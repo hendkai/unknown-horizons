@@ -44,3 +44,24 @@ def test_help(gui):
 def test_settings(gui):
 	gui.trigger('menu/settings_button')
 	gui.trigger('settings_window/cancelButton')
+
+
+@gui_test(timeout=60)
+def test_settings_resolution_list_is_readable(gui):
+	"""The screen-resolution choices must use a high-contrast text style.
+
+	This protects the settings dialog against the macOS/FIFE rendering issue
+	where the list entries were present at the widget layer but appeared nearly
+	blank in the visible menu.
+	"""
+
+	gui.trigger('menu/settings_button')
+	resolution_list = gui.find('screen_resolution')
+	assert resolution_list.items
+	assert resolution_list.font == 'unifont'
+	foreground = resolution_list.foreground_color
+	selection = resolution_list.selection_color
+	assert (foreground.r, foreground.g, foreground.b) == (68, 42, 2)
+	assert selection.a <= 32
+	assert resolution_list.height >= 90
+	gui.trigger('settings_window/cancelButton')

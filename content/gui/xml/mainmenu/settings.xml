@@ -16,8 +16,8 @@
 			<HBox max_size="280,445">
 				<VBox>
 					<Label text="Screen resolution:" name="screen_resolution_label" wrap_text="1" />
-					<ScrollArea min_size="100,175">
-						<ListBox name="screen_resolution" is_focusable="0" />
+					<ScrollArea min_size="150,175">
+						<ReadableListBox name="screen_resolution" is_focusable="0" min_size="150,90" font="unifont" foreground_color="68,42,2,255" selection_color="0,0,0,0" />
 					</ScrollArea>
 
 				<Spacer fixed_size="15,0" />
