@@ -28,6 +28,7 @@ from horizons.component.commandablecomponent import CommandableComponent
 from horizons.component.healthcomponent import HealthComponent
 from horizons.constants import LAYERS
 from horizons.extscheduler import ExtScheduler
+from horizons.util.fife_compat import get_fife_action_name
 from horizons.util.python.callback import Callback
 from horizons.util.python.weakmethod import WeakMethod
 from horizons.util.shapes import Point
@@ -96,7 +97,7 @@ class Unit(MovingObject, ResourceTransferHandler):
 			self.position.y + self.position.y - self.last_position.y, 0))
 
 		facing_loc = self._instance.getFacingLocation()
-		if action.getId().startswith('move_'):
+		if get_fife_action_name(action).startswith('move_'):
 			# Remember: this means we *ended* a "move" action just now!
 			facing_loc = location
 

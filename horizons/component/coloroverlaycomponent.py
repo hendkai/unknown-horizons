@@ -30,6 +30,7 @@ from horizons.component import Component
 from horizons.messaging import ActionChanged
 from horizons.scheduler import Scheduler
 from horizons.util.color import Color as UtilColor
+from horizons.util.fife_compat import get_fife_action_name
 from horizons.util.loaders.actionsetloader import ActionSetLoader
 
 
@@ -98,7 +99,7 @@ class ColorOverlayComponent(Component):
 	@property
 	def identifier(self):
 		"""E.g. 'idle_as_lumberjack_barrack0' """
-		return self.fife_instance.getCurrentAction().getId()
+		return get_fife_action_name(self.fife_instance.getCurrentAction())
 
 	def initialize(self):
 		super().initialize()
