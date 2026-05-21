@@ -26,6 +26,12 @@ require_python_module() {
 	"$PYTHON_BIN" -c "import $1" >/dev/null 2>&1 || fail "required Python module not importable: $1"
 }
 
+require_python_import() {
+	local label="$1"
+	local statement="$2"
+	"$PYTHON_BIN" -c "$statement" >/dev/null 2>&1 || fail "required Python import failed: $label"
+}
+
 require_native_arm64_macos() {
 	[[ "$(uname -s)" == "Darwin" ]] || fail "Apple-Silicon release builds must run on macOS"
 	[[ "$(uname -m)" == "arm64" ]] || fail "Apple-Silicon release builds must run on a native arm64 host"
@@ -42,6 +48,8 @@ require_release_tooling() {
 	require_command msgfmt
 	require_python_module py2app
 	require_python_module setuptools
+	require_python_import "FIFE Python bindings" "from fife import fife"
+	require_python_import "FIFEChan/pychan bindings" "from fife.extensions import pychan"
 }
 
 run_focused_tests() {
