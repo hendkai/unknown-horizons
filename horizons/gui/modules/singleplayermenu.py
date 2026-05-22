@@ -305,7 +305,7 @@ class RandomMapWidget:
 		handle, self._preview_output = tempfile.mkstemp()
 		os.close(handle)
 		self._preview_process = subprocess.Popen(args=args, stdout=open(self._preview_output, "w"))
-		self._set_map_preview_status("Generating preview…")
+		self._set_map_preview_status(T("Generating preview…"))
 
 		ExtScheduler().add_new_object(self._poll_preview_process, self, 0.5)
 
@@ -325,7 +325,7 @@ class RandomMapWidget:
 			return
 		elif self._preview_process.returncode != 0:
 			self._preview_process = None
-			self._set_map_preview_status("An unknown error occurred while generating the map preview")
+			self._set_map_preview_status(T("An unknown error occurred while generating the map preview"))
 			return
 
 		with open(self._preview_output, 'r') as f:

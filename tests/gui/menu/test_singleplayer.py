@@ -21,12 +21,36 @@
 
 import os
 import tempfile
+from contextlib import contextmanager
 from unittest import mock
 
 import yaml
 
+import horizons.i18n as i18n
 from horizons.savegamemanager import SavegameManager
 from tests.gui import gui_test
+
+
+class _DictTranslations:
+	def __init__(self, translations):
+		self._translations = translations
+
+	def gettext(self, message):
+		return self._translations.get(message, message)
+
+	def ngettext(self, message1, message2, count):
+		message = message1 if count == 1 else message2
+		return self.gettext(message)
+
+
+@contextmanager
+def _temporary_translations(translations):
+	original_translation = i18n._trans
+	i18n._trans = _DictTranslations(translations)
+	try:
+		yield
+	finally:
+		i18n._trans = original_translation
 
 
 @gui_test()
@@ -42,6 +66,13 @@ def _start_game(gui):
 		gui.trigger('singleplayermenu/okay')
 
 		return start_mock.call_args[0][0]
+
+
+def _assert_text_widgets_not_empty(gui, names):
+	for name in names:
+		widget = gui.find(name)
+		assert widget, 'Missing widget: {}'.format(name)
+		assert widget.text.strip(), 'Empty text in widget: {}'.format(name)
 
 
 @gui_test()
@@ -137,3 +168,118 @@ def test_scenario_selection_extra_information(gui):
 			assert gui.find('uni_map_difficulty').text == 'Difficulty: Impossible'
 			assert gui.find('uni_map_desc').text == 'Description: A test'
 			assert gui.find('translation_status').text == 'Something something status'
+
+
+@gui_test()
+def test_singleplayer_menu_visible_labels_are_populated(gui):
+	"""The new-game flow keeps visible labels populated while switching modes."""
+	gui.trigger('menu/single_button')
+
+	_assert_text_widgets_not_empty(gui, [
+		'singleplayermenu/headline',
+		'singleplayermenu/scenario',
+		'singleplayermenu/random',
+		'singleplayermenu/free_maps',
+		'player_label',
+		'color_label',
+		'ai_players_label',
+		'choose_map_lbl',
+		'select_lang_lbl',
+	])
+
+	gui.find('maplist').select('tutorial')
+	gui.find('uni_langlist').select('English')
+	_assert_text_widgets_not_empty(gui, [
+		'uni_map_author',
+		'uni_map_difficulty',
+		'uni_map_desc',
+	])
+
+	gui.trigger('singleplayermenu/random')
+	_assert_text_widgets_not_empty(gui, [
+		'headline_map_settings_lbl',
+		'seed_string_lbl',
+		'map_size_lbl',
+		'water_percent_lbl',
+		'max_island_size_lbl',
+		'preferred_island_size_lbl',
+		'island_size_deviation_lbl',
+		'headline_game_settings_lbl',
+		'resource_density_lbl',
+		'lbl_free_trader',
+		'lbl_pirates',
+		'lbl_disasters',
+	])
+
+	gui.trigger('singleplayermenu/free_maps')
+	gui.find('maplist').select('development')
+	_assert_text_widgets_not_empty(gui, [
+		'headline_choose_map_lbl',
+		'recommended_number_of_players_lbl',
+		'headline_game_settings_lbl',
+		'resource_density_lbl',
+		'lbl_free_trader',
+		'lbl_pirates',
+		'lbl_disasters',
+	])
+
+
+@gui_test()
+def test_singleplayer_menu_visible_labels_are_populated_in_german(gui):
+	"""The rendered new-game flow stays populated when gettext returns German."""
+	with _temporary_translations({
+		'Generating preview…': 'Vorschau wird erzeugt…',
+		'An unknown error occurred while generating the map preview':
+			'Beim Erzeugen der Kartenvorschau ist ein unbekannter Fehler aufgetreten',
+	}):
+		gui.trigger('menu/single_button')
+
+		_assert_text_widgets_not_empty(gui, [
+			'singleplayermenu/headline',
+			'singleplayermenu/scenario',
+			'singleplayermenu/random',
+			'singleplayermenu/free_maps',
+			'player_label',
+			'color_label',
+			'ai_players_label',
+			'choose_map_lbl',
+			'select_lang_lbl',
+		])
+
+		gui.find('maplist').select('tutorial')
+		gui.find('uni_langlist').select('English')
+		_assert_text_widgets_not_empty(gui, [
+			'uni_map_author',
+			'uni_map_difficulty',
+			'uni_map_desc',
+		])
+
+		gui.trigger('singleplayermenu/random')
+		_assert_text_widgets_not_empty(gui, [
+			'headline_map_settings_lbl',
+			'seed_string_lbl',
+			'map_size_lbl',
+			'water_percent_lbl',
+			'max_island_size_lbl',
+			'preferred_island_size_lbl',
+			'island_size_deviation_lbl',
+			'headline_game_settings_lbl',
+			'resource_density_lbl',
+			'lbl_free_trader',
+			'lbl_pirates',
+			'lbl_disasters',
+			'map_preview_status_label',
+		])
+		assert gui.find('map_preview_status_label').text == 'Vorschau wird erzeugt…'
+
+		gui.trigger('singleplayermenu/free_maps')
+		gui.find('maplist').select('development')
+		_assert_text_widgets_not_empty(gui, [
+			'headline_choose_map_lbl',
+			'recommended_number_of_players_lbl',
+			'headline_game_settings_lbl',
+			'resource_density_lbl',
+			'lbl_free_trader',
+			'lbl_pirates',
+			'lbl_disasters',
+		])
