@@ -2303,6 +2303,14 @@ msgstr "Bevorzugte Inselgröße:"
 msgid "Island size deviation:"
 msgstr "Inselgrößenabweichung:"
 
+#: horizons/gui/modules/singleplayermenu.py:308
+msgid "Generating preview…"
+msgstr "Vorschau wird erzeugt…"
+
+#: horizons/gui/modules/singleplayermenu.py:328
+msgid "An unknown error occurred while generating the map preview"
+msgstr "Beim Erzeugen der Kartenvorschau ist ein unbekannter Fehler aufgetreten"
+
 #: horizons/gui/modules/singleplayermenu.py:353
 msgid "Click to generate a different random map"
 msgstr "Klick generiert eine andere Zufallskarte"
