@@ -20,6 +20,7 @@
 # ###################################################
 
 import os
+import re
 import sys
 
 from fife import fife
@@ -307,11 +308,22 @@ class SettingsDialog(PickBeltWidget, Window):
 		horizons.main.set_debug_log(new)
 
 
+def _clean_resolution(resolution):
+	if isinstance(resolution, bytes):
+		resolution = resolution.decode('ascii', 'ignore')
+	resolution = str(resolution).replace('\x00', '').strip()
+	match = re.search(r'(\d+)x(\d+)', resolution)
+	if match:
+		return '{}x{}'.format(match.group(1), match.group(2))
+	return None
+
+
 def get_screen_resolutions(selected_default):
 	"""Create an instance of fife.DeviceCaps and compile a list of possible resolutions.
 
 	NOTE: This call only works if the engine is inited.
 	"""
+	selected_default = _clean_resolution(selected_default) or '1024x768'
 	possible_resolutions = {selected_default}
 
 	MIN_X = 800
@@ -325,8 +337,9 @@ def get_screen_resolutions(selected_default):
 		y = screenmode.getHeight()
 		if x < MIN_X or y < MIN_Y:
 			continue
-		res = str(x) + 'x' + str(y)
-		possible_resolutions.add(res)
+		res = _clean_resolution(str(x) + 'x' + str(y))
+		if res:
+			possible_resolutions.add(res)
 
 	by_width = lambda res: int(res.split('x')[0])
 	return sorted(possible_resolutions, key=by_width)

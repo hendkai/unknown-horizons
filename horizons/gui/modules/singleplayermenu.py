@@ -63,7 +63,10 @@ class SingleplayerMenu(Window):
 			'okay': self.act,
 			'scenario': Callback(self._select_mode, 'scenario'),
 			'random': Callback(self._select_mode, 'random'),
-			'free_maps': Callback(self._select_mode, 'free_maps')
+			'free_maps': Callback(self._select_mode, 'free_maps'),
+			'scenario_label': Callback(self._select_mode, 'scenario'),
+			'random_label': Callback(self._select_mode, 'random'),
+			'free_maps_label': Callback(self._select_mode, 'free_maps')
 		})
 
 		self._playerdata = PlayerDataSelection()
@@ -86,6 +89,7 @@ class SingleplayerMenu(Window):
 
 	def _select_mode(self, mode):
 		self._gui.hide()
+		self._gui.findChild(name=mode).marked = True
 
 		modes = {
 			'random': RandomMapWidget,
@@ -540,8 +544,8 @@ class ScenarioMapWidget:
 		else:
 			self._language_fallback_active = False
 
-		lang_list.items = available_languages
-		lang_list.selected = available_languages.index(selected_language)
+		lang_list.setInitialData(available_languages)
+		lang_list.setData(available_languages.index(selected_language))
 
 		selected_language_code = LANGUAGENAMES.get_by_value(selected_language)
 		translated_scenario = self.find_map_filename(scenario, selected_language_code)

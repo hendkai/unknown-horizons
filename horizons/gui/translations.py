@@ -688,9 +688,12 @@ def set_translations():
 
 	'singleplayermenu.xml' : {
 		('headline'                     , 'text'    ): T("New game - Singleplayer"),
-		('free_maps'                    , 'text'    ): T("Free play"),
-		('random'                       , 'text'    ): T("Random map"),
-		('scenario'                     , 'text'    ): T("Scenario"),
+		('free_maps'                    , 'text'    ): '',
+		('random'                       , 'text'    ): '',
+		('scenario'                     , 'text'    ): '',
+		('free_maps_label'              , 'text'    ): T("Free play"),
+		('random_label'                 , 'text'    ): T("Random map"),
+		('scenario_label'               , 'text'    ): T("Scenario"),
 		('cancel'                       , 'helptext'): T("Exit to main menu"),
 		('okay'                         , 'helptext'): T("Start game"),
 		},

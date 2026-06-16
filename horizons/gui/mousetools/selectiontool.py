@@ -27,6 +27,7 @@ from horizons.command.unit import Act
 from horizons.component.selectablecomponent import SelectableComponent
 from horizons.constants import LAYERS
 from horizons.gui.mousetools.navigationtool import NavigationTool
+from horizons.util.fife_compat import decode_fife_string
 from horizons.util.worldobject import WorldObject, WorldObjectNotFound
 
 
@@ -69,7 +70,7 @@ class SelectionTool(NavigationTool):
 
 	def fife_instance_to_uh_instance(self, instance):
 		"""Visual fife instance to uh game logic object or None"""
-		i_id = instance.getId()
+		i_id = decode_fife_string(instance.getId())
 		if i_id == '':
 			return None
 		try:
@@ -98,10 +99,7 @@ class SelectionTool(NavigationTool):
 				area = fife.Rect(xmin, ymin, xmax - xmin, ymax - ymin)
 			else:
 				area = fife.ScreenPoint(xx, yy)
-			instances = self.session.view.cam.getMatchingInstances(
-				area,
-				self.session.view.layers[LAYERS.OBJECTS],
-				False) # False for accurate
+			instances = self._get_matching_selection_instances(area, do_multi)
 
 			# get selection components
 			instances = (self.fife_instance_to_uh_instance(i) for i in instances)
@@ -205,6 +203,28 @@ class SelectionTool(NavigationTool):
 		renderer.addLine(self.__class__._SELECTION_RECTANGLE_NAME,
 		                 fife.RendererNode(start), fife.RendererNode(end),
 		                 200, 200, 200)
+
+	def _get_matching_selection_instances(self, area, is_rectangle):
+		layer = self.session.view.layers[LAYERS.OBJECTS]
+		try:
+			instances = self.session.view.cam.getMatchingInstances(area, layer, False)
+		except TypeError:
+			instances = self.session.view.cam.getMatchingInstances(area, layer)
+
+		if instances or not is_rectangle:
+			return instances
+
+		instances = []
+		left = area.x
+		top = area.y
+		right = area.x + area.w
+		bottom = area.y + area.h
+		step = 8
+		for x in range(left, right + 1, step):
+			for y in range(top, bottom + 1, step):
+				instances.extend(self.session.view.cam.getMatchingInstances(
+					fife.ScreenPoint(x, y), layer, False))
+		return instances
 
 	def _update_selection(self, instances, do_multi=False):
 		"""

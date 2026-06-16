@@ -79,6 +79,7 @@ STYLES = {
 			'base_color': BROWN[96],
 		},
 		'TextField': {
+			'foreground_color': BROWN[255],
 			'selection_color': BROWN[96],
 			'background_color': WHITE[64],
 		},

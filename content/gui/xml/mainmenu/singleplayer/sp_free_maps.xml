@@ -2,7 +2,7 @@
 <VBox fixed_size="320,480"  name="right_side">
 	<Label text="Choose a map to play:"  name="headline_choose_map_lbl" />
 	<ScrollArea fixed_size="290,140" name="map_list_area">
-		<ListBox name="maplist" is_focusable="0" />
+		<ReadableListBox name="maplist" is_focusable="0" min_size="270,120" font="unifont" foreground_color="68,42,2,255" selection_color="0,0,0,0" />
 	</ScrollArea>
 	<Label name="recommended_number_of_players_lbl" />
 	<Icon name="map_preview_minimap" fixed_size="128,128" is_focusable="0" />

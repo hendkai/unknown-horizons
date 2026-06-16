@@ -30,6 +30,7 @@ from fife import fife
 import horizons.globals
 import horizons.main
 from horizons.constants import PATHS
+from horizons.util.fife_compat import get_fife_key
 from horizons.util.living import LivingObject
 
 from .keyconfig import KeyConfig
@@ -62,7 +63,7 @@ class MainListener(fife.IKeyListener, fife.ICommandListener, LivingObject):
 
 		if action == _Actions.ESCAPE:
 			self.gui.on_escape()
-		elif keyval == fife.Key.ENTER:
+		elif keyval == get_fife_key(fife, 'ENTER', 'RETURN'):
 			self.gui.on_return()
 		elif action == _Actions.CONSOLE:
 			self.gui.fps_display.toggle()

@@ -30,6 +30,7 @@ import horizons.globals
 from horizons.gui.util import load_uh_widget
 from horizons.gui.widgets.imagebutton import CancelButton, OkButton
 from horizons.i18n import gettext as T
+from horizons.util.fife_compat import get_fife_key
 from horizons.util.python.callback import Callback
 
 
@@ -200,7 +201,7 @@ class Dialog(Window):
 		if event.getKey().getValue() == fife.Key.ESCAPE:
 			self.trigger_close(CancelButton.DEFAULT_NAME)
 		# Convention says use ok action
-		elif event.getKey().getValue() == fife.Key.ENTER:
+		elif event.getKey().getValue() == get_fife_key(fife, 'ENTER', 'RETURN'):
 			self.trigger_close(OkButton.DEFAULT_NAME)
 
 	def trigger_close(self, event_name):

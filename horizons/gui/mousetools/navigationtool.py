@@ -28,6 +28,7 @@ from horizons.extscheduler import ExtScheduler
 from horizons.gui.mousetools.cursortool import CursorTool
 from horizons.i18n import gettext as T
 from horizons.messaging import HoverInstancesChanged
+from horizons.util.fife_compat import decode_fife_string
 from horizons.util.lastactiveplayersettlementmanager import LastActivePlayerSettlementManager
 from horizons.util.python.weaklist import WeakList
 from horizons.util.worldobject import WorldObject, WorldObjectNotFound
@@ -247,7 +248,7 @@ class NavigationTool(CursorTool):
 
 		hover_instances = []
 		for i in all_instances:
-			id = i.getId()
+			id = decode_fife_string(i.getId())
 			# Check id, can be '' if instance is created and clicked on before
 			# actual game representation class is created (network play)
 			if id == '':

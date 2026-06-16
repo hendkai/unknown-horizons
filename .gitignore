@@ -31,3 +31,6 @@ content/tilesets.json
 
 # vscode settings
 .vscode
+
+# Agent worktrees
+.worktrees/

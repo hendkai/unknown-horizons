@@ -6,9 +6,12 @@
 		<Label text="New game - Singleplayer" position="70,10"  name="headline" />
 		<hr position="52,30" />
 
-		<RadioButton position="22,50"  size="32,32"  name="scenario"  group="gametype" text="Scenario"   />
-		<RadioButton position="22,80"  size="32,32"  name="random"    group="gametype" text="Random map" />
-		<RadioButton position="22,110" size="32,32"  name="free_maps" group="gametype" text="Free play"  />
+		<RadioButton position="22,50"  size="32,32"  name="scenario"  group="gametype" />
+		<Label position="52,57" fixed_size="150,20" name="scenario_label" text="Scenario" />
+		<RadioButton position="22,80"  size="32,32"  name="random"    group="gametype" />
+		<Label position="52,87" fixed_size="150,20" name="random_label" text="Random map" />
+		<RadioButton position="22,110" size="32,32"  name="free_maps" group="gametype" />
+		<Label position="52,117" fixed_size="150,20" name="free_maps_label" text="Free play" />
 
 		<hr position="52,170" />
 

@@ -58,6 +58,10 @@ def exit_with_error(title, message):
 	Print an error (optionally showing a window using TK), and exit the game.
 	"""
 	print('Error: {}\n{}'.format(title, message))
+	if sys.platform == 'darwin':
+		# Tk can abort the whole app while creating its console/menu on modern
+		# macOS builds. The terminal/log output above is safer for diagnostics.
+		sys.exit(1)
 	try:
 		import tkinter
 		import tkinter.messagebox as messagebox
@@ -150,13 +154,13 @@ def main():
 	import horizons.main
 	ret = horizons.main.start(options)
 
-	if logfile:
-		logfile.close()
 	if ret:
 		print(T('Thank you for using Unknown Horizons!'))
 	else:
 		# Game didn't end successfully
 		sys.exit(1)
+	if logfile:
+		logfile.close()
 
 
 def check_requirements():
@@ -284,10 +288,12 @@ def setup_debugging(options):
 			def write(self, line):
 				line = str(line)
 				sys.__stdout__.write(line)
-				logfile.write(line)
+				if logfile and not logfile.closed:
+					logfile.write(line)
 			def flush(self):
 				sys.__stdout__.flush()
-				logfile.flush()
+				if logfile and not logfile.closed:
+					logfile.flush()
 		sys.stdout = StdOutDuplicator()
 
 		# add a handler to stderr too _but_ only if logfile isn't already a tty

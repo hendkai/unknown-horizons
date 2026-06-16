@@ -43,6 +43,7 @@ from horizons.gui.widgets.playersships import PlayersShips
 from horizons.gui.widgets.resourceoverviewbar import ResourceOverviewBar
 from horizons.gui.windows import WindowManager
 from horizons.i18n import gettext as T
+from horizons.util.fife_compat import get_fife_digit, get_fife_key
 from horizons.messaging import (
 	GuiAction, GuiCancelAction, GuiHover, LanguageChanged, MineEmpty, NewDisaster, NewSettlement,
 	PlayerLevelUpgrade, SpeedChanged, TabWidgetChanged, ZoomChanged)
@@ -463,7 +464,7 @@ class IngameGui(LivingObject):
 
 		if action == _Actions.ESCAPE:
 			return self.on_escape()
-		elif keyval == fife.Key.ENTER:
+		elif keyval == get_fife_key(fife, 'ENTER', 'RETURN'):
 			return self.on_return()
 
 		if action == _Actions.GRID:
@@ -523,8 +524,8 @@ class IngameGui(LivingObject):
 			self.session.world.toggle_translucency()
 		elif action == _Actions.TILE_OWNER_HIGHLIGHT:
 			self.session.world.toggle_owner_highlight()
-		elif fife.Key.NUM_0 <= keyval <= fife.Key.NUM_9:
-			num = int(keyval - fife.Key.NUM_0)
+		elif get_fife_digit(fife, keyval) is not None:
+			num = get_fife_digit(fife, keyval)
 			self.handle_selection_group(num, evt.isControlPressed())
 		elif action == _Actions.QUICKSAVE:
 			self.session.quicksave()
